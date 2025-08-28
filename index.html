@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中国城市随机抽取程序</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: #e6e6e6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        header {
+            text-align: center;
+            margin: 20px 0;
+            width: 100%;
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            color: #4cc9f0;
+            margin-bottom: 15px;
+            text-shadow: 0 0 15px rgba(76, 201, 240, 0.7);
+        }
+        
+        .description {
+            font-size: 1.2rem;
+            color: #a0a0a0;
+            max-width: 800px;
+            margin: 0 auto 30px;
+            line-height: 1.6;
+        }
+        
+        .content {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+            width: 100%;
+        }
+        
+        .map-container {
+            flex: 1;
+            min-width: 300px;
+            max-width: 600px;
+            height: 500px;
+            background-color: #162447;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        #china-map {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .controls {
+            flex: 1;
+            min-width: 300px;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(22, 36, 71, 0.8);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+        }
+        
+        #draw-button {
+            padding: 18px 50px;
+            font-size: 1.4rem;
+            background: linear-gradient(135deg, #4cc9f0, #4361ee);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            margin: 20px 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 20px rgba(76, 201, 240, 0.5);
+        }
+        
+        #draw-button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(76, 201, 240, 0.7);
+        }
+        
+        #draw-button:disabled {
+            background: linear-gradient(135deg, #555, #333);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .timer-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px 0;
+        }
+        
+        .timer-label {
+            font-size: 1.2rem;
+            color: #a0a0a0;
+            margin-bottom: 10px;
+        }
+        
+        .timer {
+            font-size: 3rem;
+            color: #f72585;
+            text-shadow: 0 0 15px rgba(247, 37, 133, 0.7);
+        }
+        
+        .result-container {
+            text-align: center;
+            margin: 20px 0;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .result-label {
+            font-size: 1.2rem;
+            color: #a0a0a0;
+            margin-bottom: 15px;
+        }
+        
+        .result {
+            font-size: 2.2rem;
+            color: #4cc9f0;
+            text-shadow: 0 0 15px rgba(76, 201, 240, 0.7);
+        }
+        
+        .city-path {
+            fill: #2d374d;
+            stroke: #4a5568;
+            stroke-width: 0.5;
+            transition: all 0.3s ease;
+        }
+        
+        .city-path:hover {
+            fill: #3c4c6d;
+            stroke: #4cc9f0;
+        }
+        
+        .city-highlight {
+            fill: #4361ee;
+            stroke: #4cc9f0;
+            stroke-width: 1.5;
+            animation: pulse 1s infinite;
+        }
+        
+        .city-final {
+            fill: #f72585;
+            stroke: #fff;
+            stroke-width: 2;
+            filter: url(#glow);
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.7; }
+            50% { opacity: 1; }
+            100% { opacity: 0.7; }
+        }
+        
+        .instructions {
+            background-color: rgba(22, 36, 71, 0.8);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 30px 0;
+            width: 100%;
+            max-width: 900px;
+        }
+        
+        .instructions h2 {
+            color: #4cc9f0;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .step {
+            background-color: rgba(45, 55, 77, 0.5);
+            border-radius: 10px;
+            padding: 20px;
+        }
+        
+        .step h3 {
+            color: #f72585;
+            margin-bottom: 10px;
+        }
+        
+        footer {
+            margin-top: 40px;
+            color: #6c757d;
+            text-align: center;
+            width: 100%;
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                flex-direction: column;
+            }
+            
+            .map-container, .controls {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>中国城市随机抽取程序</h1>
+            <p class="description">点击"开始抽取"按钮，系统将在5秒内随机选择中国城市，最终结果将高亮显示在地图上</p>
+        </header>
+        
+        <div class="content">
+            <div class="map-container">
+                <svg id="china-map" viewBox="0 0 1000 800" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                            <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur" />
+                            <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -8" result="glow" />
+                            <feComposite in="SourceGraphic" in2="glow" operator="over" />
+                        </filter>
+                    </defs>
+                    
+                    <!-- 中国地图的简化轮廓 -->
+                    <path class="city-path" id="beijing" d="M500,300 L520,310 L510,330 L490,320 Z" data-city="北京" />
+                    <path class="city-path" id="shanghai" d="M600,400 L620,410 L610,430 L590,420 Z" data-city="上海" />
+                    <path class="city-path" id="guangdong" d="M550,550 L600,560 L590,600 L540,590 Z" data-city="广东" />
+                    <path class="city-path" id="sichuan" d="M450,450 L500,460 L490,500 L440,490 Z" data-city="四川" />
+                    <path class="city-path" id="xizang" d="M350,450 L400,460 L390,500 L340,490 Z" data-city="西藏" />
+                    <path class="city-path" id="xinjiang" d="M250,350 L300,360 L290,400 L240,390 Z" data-city="新疆" />
+                    <path class="city-path" id="heilongjiang" d="M550,200 L600,210 L590,250 L540,240 Z" data-city="黑龙江" />
+                    <path class="city-path" id="yunnan" d="M450,550 L500,560 L490,600 L440,590 Z" data-city="云南" />
+                    <path class="city-path" id="hunan" d="M550,450 L600,460 L590,500 L540,490 Z" data-city="湖南" />
+                    <path class="city-path" id="hubei" d="M550,400 L600,410 L590,450 L540,440 Z" data-city="湖北" />
+                    <path class="city-path" id="henan" d="M550,350 L600,360 L590,400 L540,390 Z" data-city="河南" />
+                    <path class="city-path" id="hebei" d="M520,300 L570,310 L560,350 L510,340 Z" data-city="河北" />
+                    <path class="city-path" id="shandong" d="M600,320 L650,330 L640,370 L590,360 Z" data-city="山东" />
+                    <path class="city-path" id="jiangsu" d="M620,380 L670,390 L660,430 L610,420 Z" data-city="江苏" />
+                    <path class="city-path" id="zhejiang" d="M640,420 L690,430 L680,470 L630,460 Z" data-city="浙江" />
+                    <path class="city-path" id="fujian" d="M630,480 L680,490 L670,530 L620,520 Z" data-city="福建" />
+                    <path class="city-path" id="guangxi" d="M520,530 L570,540 L560,580 L510,570 Z" data-city="广西" />
+                    <path class="city-path" id="liaoning" d="M580,250 L630,260 L620,300 L570,290 Z" data-city="辽宁" />
+                    <path class="city-path" id="jilin" d="M600,220 L650,230 L640,270 L590,260 Z" data-city="吉林" />
+                    <path class="city-path" id="neimenggu" d="M450,250 L500,260 L490,300 L440,290 Z" data-city="内蒙古" />
+                    <path class="city-path" id="gansu" d="M380,350 L430,360 L420,400 L370,390 Z" data-city="甘肃" />
+                    <path class="city-path" id="shanxi" d="M500,350 L550,360 L540,400 L490,390 Z" data-city="山西" />
+                    <path class="city-path" id="shaanxi" d="M480,400 L530,410 L520,450 L470,440 Z" data-city="陕西" />
+                    <path class="city-path" id="qinghai" d="M320,400 L370,410 L360,450 L310,440 Z" data-city="青海" />
+                    <path class="city-path" id="ningxia" d="M420,350 L440,360 L435,380 L415,370 Z" data-city="宁夏" />
+                    <path class="city-path" id="chongqing" d="M500,450 L520,455 L515,475 L495,470 Z" data-city="重庆" />
+                    <path class="city-path" id="tianjin" d="M530,310 L545,315 L542,330 L527,325 Z" data-city="天津" />
+                    <path class="city-path" id="anhui" d="M590,400 L610,405 L605,425 L585,420 Z" data-city="安徽" />
+                    <path class="city-path" id="jiangxi" d="M600,450 L620,455 L615,475 L595,470 Z" data-city="江西" />
+                    <path class="city-path" id="guizhou" d="M510,500 L530,505 L525,525 L505,520 Z" data-city="贵州" />
+                    <path class="city-path" id="hainan" d="M560,580 L580,585 L575,605 L555,600 Z" data-city="海南" />
+                    <path class="city-path" id="taiwan" d="M680,480 L700,485 L695,505 L675,500 Z" data-city="台湾" />
+                </svg>
+            </div>
+            
+            <div class="controls">
+                <button id="draw-button">开始抽取</button>
+                
+                <div class="timer-container">
+                    <div class="timer-label">剩余时间</div>
+                    <div class="timer" id="timer">5.0</div>
+                </div>
+                
+                <div class="result-container">
+                    <div class="result-label">抽取结果</div>
+                    <div class="result" id="result">等待抽取...</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <h2>部署指南</h2>
+            <div class="steps">
+                <div class="step">
+                    <h3>步骤 1: 保存文件</h3>
+                    <p>将本页另存为HTML文件（右键 → 另存为）</p>
+                </div>
+                <div class="step">
+                    <h3>步骤 2: 本地运行</h3>
+                    <p>双击保存的HTML文件，它将在浏览器中打开并运行</p>
+                </div>
+                <div class="step">
+                    <h3>步骤 3: 在线部署（可选）</h3>
+                    <p>上传到GitHub Pages、Netlify或Vercel等免费托管服务</p>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>© 2023 中国城市随机抽取程序 | 设计给新手学习使用</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const drawButton = document.getElementById('draw-button');
+            const timerDisplay = document.getElementById('timer');
+            const resultDisplay = document.getElementById('result');
+            const cityPaths = document.querySelectorAll('.city-path');
+            
+            // 城市列表
+            const cities = Array.from(cityPaths).map(path => path.id);
+            
+            let countdown;
+            let remainingTime = 5;
+            let randomInterval;
+            
+            // 开始随机选择城市
+            function startRandomSelection() {
+                drawButton.disabled = true;
+                resultDisplay.textContent = "抽取中...";
+                remainingTime = 5;
+                
+                // 更新计时器
+                countdown = setInterval(() => {
+                    remainingTime -= 0.1;
+                    timerDisplay.textContent = remainingTime.toFixed(1);
+                    
+                    if (remainingTime <= 0) {
+                        clearInterval(countdown);
+                        timerDisplay.textContent = "0.0";
+                        stopRandomSelection();
+                    }
+                }, 100);
+                
+                // 随机高亮城市
+                randomInterval = setInterval(highlightRandomCity, 200);
+            }
+            
+            // 高亮随机城市
+            function highlightRandomCity() {
+                // 移除所有高亮
+                cityPaths.forEach(path => {
+                    path.classList.remove('city-highlight');
+                    path.classList.remove('city-final');
+                });
+                
+                // 随机选择一个城市
+                const randomIndex = Math.floor(Math.random() * cities.length);
+                const randomCityId = cities[randomIndex];
+                const randomCityElement = document.getElementById(randomCityId);
+                
+                // 高亮选中的城市
+                randomCityElement.classList.add('city-highlight');
+            }
+            
+            // 停止随机选择并确定最终结果
+            function stopRandomSelection() {
+                clearInterval(randomInterval);
+                clearInterval(countdown);
+                
+                // 最终随机选择一个城市
+                const finalIndex = Math.floor(Math.random() * cities.length);
+                const finalCityId = cities[finalIndex];
+                const finalCityElement = document.getElementById(finalCityId);
+                const finalCityName = finalCityElement.getAttribute('data-city');
+                
+                // 移除所有高亮，然后添加最终高亮
+                cityPaths.forEach(path => {
+                    path.classList.remove('city-highlight');
+                    path.classList.remove('city-final');
+                });
+                
+                finalCityElement.classList.add('city-final');
+                
+                // 显示结果
+                resultDisplay.textContent = `抽中的城市：${finalCityName}`;
+                
+                // 重新启用按钮
+                drawButton.disabled = false;
+            }
+            
+            // 添加按钮点击事件
+            drawButton.addEventListener('click', startRandomSelection);
+            
+            // 添加鼠标悬停效果
+            cityPaths.forEach(path => {
+                path.addEventListener('mouseover', function() {
+                    const cityName = this.getAttribute('data-city');
+                    resultDisplay.textContent = `当前指向：${cityName}`;
+                });
+                
+                path.addEventListener('mouseout', function() {
+                    if (!drawButton.disabled) {
+                        resultDisplay.textContent = "等待抽取...";
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
